@@ -1,0 +1,175 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ISA-95 Standardized Data Schema",
+  "type": "object",
+  "required": ["messageId", "timestamp", "source", "equipment"],
+  "properties": {
+    "messageId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for this message"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of the data"
+    },
+    "source": {
+      "type": "object",
+      "required": ["area", "workUnit", "equipmentClass", "equipmentId"],
+      "properties": {
+        "area": {
+          "type": "string",
+          "enum": ["PRODUCTION", "PACKAGING", "MATERIAL_HANDLING", "QUALITY_CONTROL", "GENERAL"],
+          "description": "ISA-95 production area"
+        },
+        "workUnit": {
+          "type": "string",
+          "description": "Work unit identifier"
+        },
+        "equipmentClass": {
+          "type": "string",
+          "description": "Equipment classification"
+        },
+        "equipmentId": {
+          "type": "string",
+          "description": "Unique equipment identifier"
+        }
+      }
+    },
+    "equipment": {
+      "type": "object",
+      "required": ["id", "type", "status", "availability"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Equipment identifier"
+        },
+        "type": {
+          "type": "string",
+          "description": "Equipment type"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["ACTIVE", "IDLE", "FAULT", "MAINTENANCE"],
+          "description": "ISA-95 equipment status"
+        },
+        "availability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Equipment availability percentage"
+        },
+        "performance": {
+          "type": "object",
+          "properties": {
+            "efficiency": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "cycleCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "runtimeHours": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "process": {
+      "type": "object",
+      "properties": {
+        "parameters": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-zA-Z][a-zA-Z0-9]*$": {
+              "type": "object",
+              "required": ["value", "unit", "timestamp"],
+              "properties": {
+                "value": {
+                  "type": "number",
+                  "description": "Parameter value"
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "Unit of measurement"
+                },
+                "timestamp": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Parameter timestamp"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "properties": {
+        "goodParts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "badParts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rejectRate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "totalParts": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "maintenance": {
+      "type": "object",
+      "properties": {
+        "lastMaintenanceHours": {
+          "type": "number",
+          "minimum": 0
+        },
+        "currentState": {
+          "type": "string",
+          "enum": ["RUNNING", "IDLE", "ERROR", "MAINTENANCE"]
+        },
+        "errorCode": {
+          "type": ["string", "null"]
+        },
+        "nextMaintenanceDue": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "tags": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["L0-L1", "L2", "L3", "L4"]
+        },
+        "dataType": {
+          "type": "string",
+          "enum": ["equipment", "process", "quality", "maintenance"]
+        },
+        "processArea": {
+          "type": "string"
+        },
+        "criticality": {
+          "type": "string",
+          "enum": ["LOW", "MEDIUM", "HIGH"]
+        }
+      }
+    }
+  }
+}

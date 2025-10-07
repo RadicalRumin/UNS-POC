@@ -1,0 +1,13 @@
+{
+  "name": "plc-simulator",
+  "version": "1.0.0",
+  "description": "PLC data simulator for UNS POC",
+  "main": "simulator.js",
+  "dependencies": {
+    "mqtt": "^5.0.0",
+    "uuid": "^9.0.0"
+  },
+  "scripts": {
+    "start": "node simulator.js"
+  }
+}

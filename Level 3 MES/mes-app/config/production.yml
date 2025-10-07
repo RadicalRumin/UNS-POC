@@ -1,0 +1,146 @@
+# MES Production Scheduling Configuration
+
+# Production Rules
+production_rules:
+  # Minimum batch size for each product type
+  minimum_batch_sizes:
+    PROD_001: 50
+    PROD_002: 25
+    PROD_003: 100
+    
+  # Maximum batch size to prevent overproduction
+  maximum_batch_sizes:
+    PROD_001: 500
+    PROD_002: 250
+    PROD_003: 1000
+    
+  # Buffer stock levels
+  buffer_levels:
+    PROD_001:
+      minimum: 100
+      maximum: 1000
+      reorder_point: 200
+    PROD_002:
+      minimum: 50
+      maximum: 500
+      reorder_point: 100
+    PROD_003:
+      minimum: 200
+      maximum: 2000
+      reorder_point: 400
+
+# Scheduling Parameters
+scheduling:
+  # Planning horizon in days
+  planning_horizon: 7
+  
+  # Scheduling frequency (how often to re-calculate schedule)
+  schedule_frequency: "hourly"  # hourly, daily, weekly
+  
+  # Changeover times between products (in minutes)
+  changeover_matrix:
+    PROD_001:
+      PROD_001: 0
+      PROD_002: 45
+      PROD_003: 30
+    PROD_002:
+      PROD_001: 60
+      PROD_002: 0
+      PROD_003: 15
+    PROD_003:
+      PROD_001: 45
+      PROD_002: 20
+      PROD_003: 0
+      
+  # Equipment preferences for products
+  equipment_preferences:
+    PROD_001:
+      preferred: ["LINE_01"]
+      alternate: ["CONV_01"]
+    PROD_002:
+      preferred: ["LINE_01", "PKG_01"]
+      alternate: []
+    PROD_003:
+      preferred: ["CONV_01"]
+      alternate: ["LINE_01"]
+
+# Quality Control Parameters
+quality_control:
+  # Sampling rates (percentage of production to inspect)
+  sampling_rates:
+    PROD_001: 10  # 10% of production
+    PROD_002: 15  # 15% of production
+    PROD_003: 5   # 5% of production
+    
+  # Quality gates (points where quality must be checked)
+  quality_gates:
+    - stage: "incoming_material"
+      frequency: "per_batch"
+    - stage: "in_process"
+      frequency: "hourly"
+    - stage: "final_inspection"
+      frequency: "per_unit"
+      
+  # Acceptable quality limits
+  quality_limits:
+    reject_rate_max: 5.0  # Maximum 5% reject rate
+    rework_rate_max: 10.0  # Maximum 10% rework rate
+
+# Maintenance Scheduling
+maintenance:
+  # Preventive maintenance windows
+  pm_windows:
+    preferred_days: ["saturday", "sunday"]
+    preferred_hours: ["22:00-06:00"]
+    
+  # Maintenance types and frequencies
+  maintenance_types:
+    routine:
+      frequency: 168  # hours (weekly)
+      duration: 2     # hours
+      can_defer: true
+      max_defer: 24   # hours
+    preventive:
+      frequency: 720  # hours (monthly)
+      duration: 8     # hours
+      can_defer: false
+    overhaul:
+      frequency: 8760 # hours (yearly)
+      duration: 48    # hours
+      can_defer: false
+      requires_shutdown: true
+
+# Performance Targets
+performance_targets:
+  daily:
+    throughput_target: 0.85  # 85% of theoretical maximum
+    utilization_target: 0.80  # 80% equipment utilization
+    efficiency_target: 0.85   # 85% overall efficiency
+    
+  weekly:
+    oee_target: 0.75          # 75% Overall Equipment Effectiveness
+    schedule_adherence: 0.90   # 90% schedule adherence
+    
+  monthly:
+    cost_variance: 0.05       # Within 5% of budget
+    delivery_performance: 0.95 # 95% on-time delivery
+
+# Resource Constraints
+resource_constraints:
+  # Maximum concurrent work orders per equipment
+  max_concurrent_orders:
+    LINE_01: 2
+    PKG_01: 1
+    CONV_01: 3
+    
+  # Operator requirements
+  operator_requirements:
+    LINE_01: 2  # operators required
+    PKG_01: 1   # operators required
+    CONV_01: 1  # operators required
+    
+  # Shift-based capacity factors
+  shift_capacity_factors:
+    shift_1: 1.0    # 100% capacity
+    shift_2: 0.9    # 90% capacity
+    shift_3: 0.8    # 80% capacity

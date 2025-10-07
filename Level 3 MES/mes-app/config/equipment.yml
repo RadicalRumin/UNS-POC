@@ -1,0 +1,142 @@
+# MES Equipment Configuration
+# Maps equipment IDs to their properties and production capabilities
+
+equipment:
+  LINE_01:
+    name: "Production Line 1"
+    type: "PRODUCTION_LINE"
+    area: "PRODUCTION"
+    capacity: 1000  # parts per hour
+    products:
+      - "PROD_001"
+      - "PROD_002"
+    setup_time: 30  # minutes
+    cycle_time: 3.6  # seconds per part
+    efficiency_target: 85  # percent
+    availability_target: 90  # percent
+    quality_target: 98  # percent
+    maintenance_interval: 168  # hours (1 week)
+    
+  PKG_01:
+    name: "Packaging Unit 1"
+    type: "PACKAGING_UNIT"
+    area: "PACKAGING"
+    capacity: 500  # packages per hour
+    products:
+      - "PROD_002"
+      - "PROD_003"
+    setup_time: 15  # minutes
+    cycle_time: 7.2  # seconds per package
+    efficiency_target: 90  # percent
+    availability_target: 95  # percent
+    quality_target: 99  # percent
+    maintenance_interval: 336  # hours (2 weeks)
+    
+  CONV_01:
+    name: "Conveyor System 1"
+    type: "CONVEYOR_SYSTEM"
+    area: "MATERIAL_HANDLING"
+    capacity: 1200  # items per hour
+    products:
+      - "PROD_001"
+      - "PROD_002"
+      - "PROD_003"
+    setup_time: 5  # minutes
+    cycle_time: 3.0  # seconds per item
+    efficiency_target: 95  # percent
+    availability_target: 98  # percent
+    quality_target: 99.5  # percent
+    maintenance_interval: 720  # hours (1 month)
+
+# Product Definitions
+products:
+  PROD_001:
+    name: "Industrial Widget A"
+    description: "High-precision industrial component"
+    unit_cost: 25.00
+    target_production_rate: 250  # per hour
+    quality_specs:
+      tolerance: 0.01
+      surface_finish: "Ra 1.6"
+      material: "Steel 316L"
+    
+  PROD_002:
+    name: "Industrial Widget B"
+    description: "Medium-precision packaged component"
+    unit_cost: 32.50
+    target_production_rate: 150  # per hour
+    quality_specs:
+      tolerance: 0.02
+      surface_finish: "Ra 3.2"
+      material: "Aluminum 6061"
+    
+  PROD_003:
+    name: "Industrial Widget C"
+    description: "Standard component for bulk production"
+    unit_cost: 18.75
+    target_production_rate: 400  # per hour
+    quality_specs:
+      tolerance: 0.05
+      surface_finish: "Ra 6.3"
+      material: "Mild Steel"
+
+# Work Order Priorities
+priorities:
+  CRITICAL: 1
+  HIGH: 2
+  MEDIUM: 3
+  LOW: 4
+
+# Production Shifts
+shifts:
+  shift_1:
+    name: "Day Shift"
+    start_time: "06:00"
+    end_time: "14:00"
+    days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+    
+  shift_2:
+    name: "Evening Shift"
+    start_time: "14:00"
+    end_time: "22:00"
+    days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+    
+  shift_3:
+    name: "Night Shift"
+    start_time: "22:00"
+    end_time: "06:00"
+    days: ["sunday", "monday", "tuesday", "wednesday", "thursday"]
+
+# KPI Thresholds
+kpi_thresholds:
+  oee:
+    excellent: 85
+    good: 75
+    fair: 65
+    poor: 0
+    
+  availability:
+    excellent: 95
+    good: 90
+    fair: 85
+    poor: 0
+    
+  performance:
+    excellent: 90
+    good: 85
+    fair: 80
+    poor: 0
+    
+  quality:
+    excellent: 99
+    good: 97
+    fair: 95
+    poor: 0
+
+# Alert Configuration
+alerts:
+  efficiency_low_threshold: 70
+  availability_low_threshold: 85
+  quality_low_threshold: 95
+  temperature_high_threshold: 80
+  maintenance_due_threshold: 24  # hours

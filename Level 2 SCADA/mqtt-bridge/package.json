@@ -1,0 +1,15 @@
+{
+  "name": "ignition-mqtt-bridge",
+  "version": "1.0.0",
+  "description": "MQTT Bridge for Ignition Gateway to UNS integration",
+  "main": "bridge.js",
+  "dependencies": {
+    "mqtt": "^5.0.0",
+    "axios": "^1.5.0",
+    "uuid": "^9.0.0",
+    "ws": "^8.14.0"
+  },
+  "scripts": {
+    "start": "node bridge.js"
+  }
+}

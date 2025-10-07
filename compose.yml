@@ -1,0 +1,6 @@
+include:
+  - path: ./UNS/compose.yml
+  - path: ./Level 0-1 LINE/compose.yml  
+  - path: ./Level 2 SCADA/compose.yml
+  - path: ./Level 3 MES/compose.yml
+  - path: ./Level 4 ERP/compose.yml

@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Raw PLC Data Schema",
+  "type": "object",
+  "required": ["timestamp", "machineId", "machineType", "sensors", "status"],
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of the data reading"
+    },
+    "machineId": {
+      "type": "string",
+      "description": "Unique identifier for the machine/equipment"
+    },
+    "machineType": {
+      "type": "string",
+      "enum": ["PRODUCTION_LINE", "PACKAGING_UNIT", "CONVEYOR_SYSTEM", "QUALITY_STATION"],
+      "description": "Type/category of the machine"
+    },
+    "sensors": {
+      "type": "object",
+      "required": ["temperature", "pressure", "speed"],
+      "properties": {
+        "temperature": {
+          "type": "number",
+          "minimum": -50,
+          "maximum": 200,
+          "description": "Temperature reading in Celsius"
+        },
+        "pressure": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Pressure reading in bar"
+        },
+        "speed": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Speed as percentage of maximum"
+        },
+        "vibration": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 20,
+          "description": "Vibration level in mm/s"
+        },
+        "power_consumption": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 500,
+          "description": "Power consumption in kW"
+        }
+      }
+    },
+    "status": {
+      "type": "object",
+      "required": ["state", "cycle_count", "runtime_hours"],
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": ["RUNNING", "IDLE", "ERROR", "MAINTENANCE"],
+          "description": "Current operational state"
+        },
+        "cycle_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total production cycles completed"
+        },
+        "runtime_hours": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Total runtime in hours"
+        },
+        "last_maintenance_hours": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Hours since last maintenance"
+        },
+        "error_code": {
+          "type": ["string", "null"],
+          "description": "Error code if in error state"
+        },
+        "efficiency": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Current efficiency percentage"
+        }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "properties": {
+        "good_parts": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of good parts produced"
+        },
+        "bad_parts": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of bad parts produced"
+        },
+        "reject_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Rejection rate as percentage"
+        }
+      }
+    }
+  }
+}

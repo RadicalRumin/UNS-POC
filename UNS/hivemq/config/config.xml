@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<hivemq>
+    <control-center>
+        <listeners>
+            <http>
+                <port>8080</port>
+                <bind-address>0.0.0.0</bind-address>
+            </http>
+        </listeners>
+    </control-center>
+    
+    <mqtt>
+        <retained-messages>
+            <enabled>true</enabled>
+        </retained-messages>
+        
+        <wildcard-subscriptions>
+            <enabled>true</enabled>
+        </wildcard-subscriptions>
+        
+        <shared-subscriptions>
+            <enabled>true</enabled>
+        </shared-subscriptions>
+        
+        <keep-alive>
+            <max-keep-alive>65535</max-keep-alive>
+            <allow-unlimited>true</allow-unlimited>
+        </keep-alive>
+    </mqtt>
+    
+    <restrictions>
+        <max-connections>1000</max-connections>
+        <max-client-id-length>65535</max-client-id-length>
+        <max-topic-length>65535</max-topic-length>
+    </restrictions>
+</hivemq>

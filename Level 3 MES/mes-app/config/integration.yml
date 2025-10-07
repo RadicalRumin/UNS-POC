@@ -1,0 +1,163 @@
+# MES Integration Configuration
+
+# External System Integrations
+integrations:
+  erp:
+    enabled: true
+    url: "http://erp-service:3002"
+    api_version: "v1"
+    authentication:
+      type: "basic"  # basic, bearer, api_key
+      username: "mes_user"
+      password: "mes_integration_key"
+    endpoints:
+      inventory: "/api/inventory"
+      orders: "/api/orders"
+      financial: "/api/financial"
+    sync_frequency: 300  # seconds (5 minutes)
+    timeout: 30  # seconds
+    
+  scada:
+    enabled: true
+    mqtt_topics:
+      - "uns/scada/processed/+/+"
+      - "uns/scada/alerts/+"
+      - "uns/scada/alarm-summary"
+    data_retention: 7  # days
+    
+  plc:
+    enabled: true
+    mqtt_topics:
+      - "raw/plc/+/data"
+    data_validation: true
+    timeout: 10  # seconds
+
+# Data Synchronization
+data_sync:
+  # Inventory synchronization with ERP
+  inventory_sync:
+    enabled: true
+    frequency: 600  # seconds (10 minutes)
+    batch_size: 100
+    retry_attempts: 3
+    retry_delay: 30  # seconds
+    
+  # Production data to ERP
+  production_sync:
+    enabled: true
+    frequency: 300  # seconds (5 minutes)
+    include_quality_data: true
+    include_downtime_data: true
+    
+  # Work order status to ERP
+  workorder_sync:
+    enabled: true
+    frequency: 120  # seconds (2 minutes)
+    sync_on_status_change: true
+
+# Message Queue Configuration
+message_queues:
+  # Internal message processing
+  internal:
+    max_queue_size: 1000
+    processing_threads: 4
+    retry_attempts: 3
+    dead_letter_queue: true
+    
+  # External integration queues
+  external:
+    max_queue_size: 500
+    processing_threads: 2
+    retry_attempts: 5
+    circuit_breaker:
+      enabled: true
+      failure_threshold: 10
+      timeout: 60  # seconds
+
+# API Rate Limiting
+rate_limiting:
+  enabled: true
+  requests_per_minute: 100
+  burst_limit: 200
+  whitelist:
+    - "erp-service"
+    - "scada-mqtt-bridge"
+
+# Security Configuration
+security:
+  enable_authentication: false  # For POC, disabled
+  enable_authorization: false   # For POC, disabled
+  cors:
+    enabled: true
+    origins: ["*"]
+    methods: ["GET", "POST", "PUT", "DELETE"]
+    headers: ["Content-Type", "Authorization"]
+  
+  # API Keys (for future use)
+  api_keys:
+    erp_integration: "mes_erp_key_12345"
+    scada_integration: "mes_scada_key_67890"
+
+# Monitoring and Alerting
+monitoring:
+  health_check:
+    enabled: true
+    interval: 30  # seconds
+    endpoints:
+      - name: "mqtt_broker"
+        url: "mqtt://hivemq:1883"
+        timeout: 5
+      - name: "postgresql"
+        host: "mes-postgres"
+        port: 5432
+        timeout: 5
+      - name: "mongodb"
+        url: "mongodb://admin:password123@mongodb:27017"
+        timeout: 5
+      - name: "redis"
+        url: "redis://redis:6379"
+        timeout: 5
+        
+  metrics:
+    enabled: true
+    collection_interval: 60  # seconds
+    retention_days: 30
+    metrics_to_collect:
+      - "message_processing_rate"
+      - "api_response_time"
+      - "database_connection_pool"
+      - "mqtt_message_count"
+      - "error_rate"
+      
+  alerts:
+    enabled: true
+    alert_rules:
+      - name: "high_error_rate"
+        condition: "error_rate > 5"  # 5% error rate
+        severity: "warning"
+      - name: "database_connection_failure"
+        condition: "db_connection_failed == true"
+        severity: "critical"
+      - name: "mqtt_disconnection"
+        condition: "mqtt_connected == false"
+        severity: "critical"
+
+# Data Archival
+data_archival:
+  enabled: true
+  archive_after_days: 90
+  archive_location: "/app/archives"
+  compression: true
+  tables_to_archive:
+    - "production_data"
+    - "quality_data"
+    - "equipment_downtime"
+  
+# Backup Configuration
+backup:
+  enabled: true
+  frequency: "daily"  # daily, weekly
+  time: "02:00"  # 2 AM
+  retention_days: 30
+  backup_location: "/app/backups"
+  include_configurations: true

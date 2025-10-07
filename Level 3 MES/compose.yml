@@ -1,0 +1,46 @@
+services:
+  # MES Mock Service
+  mes-service:
+    build:
+      context: ./mes-app
+      dockerfile: Dockerfile
+    container_name: mes-service
+    ports:
+      - "3001:3001"   # MES Web Interface
+    environment:
+      MQTT_BROKER_URL: mqtt://hivemq:1883
+      MONGODB_URL: mongodb://admin:password123@mongodb:27017/mes_data?authSource=admin
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: development
+    depends_on:
+      - mes-postgres
+    volumes:
+      - ./mes-app/config:/app/config
+    networks:
+      - uns-network
+    restart: unless-stopped
+
+  # Work Order Management Database
+  mes-postgres:
+    image: postgres:15-alpine
+    container_name: mes-postgres
+    environment:
+      POSTGRES_DB: mes_workorders
+      POSTGRES_USER: mes_user
+      POSTGRES_PASSWORD: mes_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - mes_postgres_data:/var/lib/postgresql/data
+      - ./mes-app/sql:/docker-entrypoint-initdb.d
+    networks:
+      - uns-network
+    restart: unless-stopped
+
+volumes:
+  mes_postgres_data:
+
+networks:
+  uns-network:
+    external: true
+    name: uns_uns-network

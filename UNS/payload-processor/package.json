@@ -1,0 +1,16 @@
+{
+  "name": "uns-payload-processor",
+  "version": "1.0.0",
+  "description": "UNS Payload Processor - Standardizes incoming data to ISA-95 format",
+  "main": "processor.js",
+  "dependencies": {
+    "mqtt": "^5.0.0",
+    "joi": "^17.10.0",
+    "redis": "^4.6.0",
+    "mongodb": "^6.0.0",
+    "uuid": "^9.0.0"
+  },
+  "scripts": {
+    "start": "node processor.js"
+  }
+}

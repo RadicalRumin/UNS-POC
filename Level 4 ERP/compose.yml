@@ -1,0 +1,47 @@
+services:
+  # ERP Mock Service
+  erp-service:
+    build:
+      context: ./erp-app
+      dockerfile: Dockerfile
+    container_name: erp-service
+    ports:
+      - "3002:3002"   # ERP Web Interface
+    environment:
+      MQTT_BROKER_URL: mqtt://hivemq:1883
+      MONGODB_URL: mongodb://admin:password123@mongodb:27017/erp_data?authSource=admin
+      REDIS_URL: redis://redis:6379
+      MES_API_URL: http://mes-service:3001
+      NODE_ENV: development
+    depends_on:
+      - erp-postgres
+    volumes:
+      - ./erp-app/config:/app/config
+    networks:
+      - uns-network
+    restart: unless-stopped
+
+  # ERP Analytics Database
+  erp-postgres:
+    image: postgres:15-alpine
+    container_name: erp-postgres
+    environment:
+      POSTGRES_DB: erp_analytics
+      POSTGRES_USER: erp_user
+      POSTGRES_PASSWORD: erp_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - erp_postgres_data:/var/lib/postgresql/data
+      - ./erp-app/sql:/docker-entrypoint-initdb.d
+    networks:
+      - uns-network
+    restart: unless-stopped
+
+volumes:
+  erp_postgres_data:
+
+networks:
+  uns-network:
+    external: true
+    name: uns_uns-network

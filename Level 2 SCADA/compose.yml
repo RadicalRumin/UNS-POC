@@ -1,0 +1,44 @@
+services:
+  # SCADA Ignition Gateway
+  ignition:
+    image: inductiveautomation/ignition:latest
+    container_name: scada-ignition
+    ports:
+      - "8088:8088"   # Gateway web interface
+      - "8043:8043"   # Gateway HTTPS
+    environment:
+      GATEWAY_ADMIN_PASSWORD: password
+      ACCEPT_IGNITION_EULA: Y
+      IGNITION_EDITION: maker  # Use maker edition for POC
+    volumes:
+      - ignition_data:/usr/local/bin/ignition/data
+      - ./ignition/projects:/usr/local/bin/ignition/user-lib/projects
+    networks:
+      - uns-network
+    restart: unless-stopped
+
+  # MQTT Engine Module (connects Ignition to UNS)
+  ignition-mqtt-client:
+    build:
+      context: ./mqtt-bridge
+      dockerfile: Dockerfile
+    container_name: scada-mqtt-bridge
+    environment:
+      MQTT_BROKER_URL: mqtt://hivemq:1883
+      IGNITION_GATEWAY_URL: http://ignition:8088
+      GATEWAY_USER: admin
+      GATEWAY_PASSWORD: password
+    depends_on:
+      - ignition
+      - hivemq
+    networks:
+      - uns-network
+    restart: unless-stopped
+
+volumes:
+  ignition_data:
+
+networks:
+  uns-network:
+    external: true
+    name: uns_uns-network

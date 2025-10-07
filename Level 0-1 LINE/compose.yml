@@ -1,0 +1,51 @@
+services:
+  # Production Line Machine Simulators
+  plc-simulator-line1:
+    build:
+      context: ./plc-simulators
+      dockerfile: Dockerfile
+    container_name: plc-line1
+    environment:
+      MACHINE_ID: LINE_01
+      MACHINE_TYPE: PRODUCTION_LINE
+      MQTT_BROKER_URL: mqtt://hivemq:1883
+      MQTT_TOPIC_PREFIX: raw/plc/line1
+      SIMULATION_INTERVAL: 2000  # 2 seconds
+    networks:
+      - uns-network
+    restart: unless-stopped
+
+  plc-simulator-packaging:
+    build:
+      context: ./plc-simulators
+      dockerfile: Dockerfile
+    container_name: plc-packaging
+    environment:
+      MACHINE_ID: PKG_01
+      MACHINE_TYPE: PACKAGING_UNIT
+      MQTT_BROKER_URL: mqtt://hivemq:1883
+      MQTT_TOPIC_PREFIX: raw/plc/packaging
+      SIMULATION_INTERVAL: 3000  # 3 seconds
+    networks:
+      - uns-network
+    restart: unless-stopped
+
+  plc-simulator-conveyor:
+    build:
+      context: ./plc-simulators
+      dockerfile: Dockerfile
+    container_name: plc-conveyor
+    environment:
+      MACHINE_ID: CONV_01
+      MACHINE_TYPE: CONVEYOR_SYSTEM
+      MQTT_BROKER_URL: mqtt://hivemq:1883
+      MQTT_TOPIC_PREFIX: raw/plc/conveyor
+      SIMULATION_INTERVAL: 1500  # 1.5 seconds
+    networks:
+      - uns-network
+    restart: unless-stopped
+
+networks:
+  uns-network:
+    external: true
+    name: uns_uns-network

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNS MQTT Monitor - Topic Explorer & Message Viewer</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c5aa0, #1e3a5f);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .header h1 {
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stats-bar {
+            display: flex;
+            gap: 2rem;
+            color: #b0d4f1;
+            font-size: 0.9rem;
+        }
+        
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto 1fr;
+            height: calc(100vh - 120px);
+            gap: 1rem;
+            padding: 1rem;
+        }
+        
+        .topics-panel, .messages-panel {
+            background: #2a2a2a;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .panel-header {
+            background: #3a3a3a;
+            padding: 1rem;
+            border-bottom: 1px solid #4a4a4a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel-header h2 {
+            color: #4CAF50;
+            font-size: 1.2rem;
+        }
+        
+        .panel-content {
+            height: calc(100% - 70px);
+            overflow-y: auto;
+            padding: 1rem;
+        }
+        
+        .topic-item {
+            background: #333;
+            margin-bottom: 0.5rem;
+            padding: 1rem;
+            border-radius: 6px;
+            border-left: 4px solid #4CAF50;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .topic-item:hover {
+            background: #3a3a3a;
+            transform: translateX(5px);
+        }
+        
+        .topic-item.selected {
+            background: #0d47a1;
+            border-left-color: #2196F3;
+        }
+        
+        .topic-name {
+            font-weight: bold;
+            color: #81C784;
+            margin-bottom: 0.5rem;
+        }
+        
+        .topic-stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            color: #bbb;
+        }
+        
+        .topic-stats span {
+            background: #444;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+        
+        .message-item {
+            background: #333;
+            margin-bottom: 0.5rem;
+            padding: 1rem;
+            border-radius: 6px;
+            border-left: 4px solid #FF9800;
+            animation: messageAppear 0.3s ease-out;
+        }
+        
+        @keyframes messageAppear {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .message-topic {
+            color: #81C784;
+            font-weight: bold;
+        }
+        
+        .message-time {
+            color: #bbb;
+            font-size: 0.8rem;
+        }
+        
+        .message-content {
+            background: #2a2a2a;
+            padding: 0.8rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        
+        .control-bar {
+            grid-column: 1 / -1;
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .control-group label {
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+        
+        input, select, button {
+            background: #333;
+            border: 1px solid #555;
+            color: #e0e0e0;
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+        
+        button {
+            background: #4CAF50;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+        
+        .status-connected {
+            background: #4CAF50;
+            box-shadow: 0 0 5px #4CAF50;
+        }
+        
+        .status-disconnected {
+            background: #f44336;
+            box-shadow: 0 0 5px #f44336;
+        }
+        
+        .filter-active {
+            background: #2196F3 !important;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #2a2a2a;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+        
+        .json-key {
+            color: #81C784;
+        }
+        
+        .json-string {
+            color: #F44336;
+        }
+        
+        .json-number {
+            color: #2196F3;
+        }
+        
+        .json-boolean {
+            color: #FF9800;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏭 UNS MQTT Monitor - Real-time Topic Explorer</h1>
+        <div class="stats-bar">
+            <span>Status: <span class="status-indicator" id="connectionStatus"></span><span id="connectionText">Connecting...</span></span>
+            <span>Topics: <span id="topicCount">0</span></span>
+            <span>Total Messages: <span id="totalMessages">0</span></span>
+            <span>Messages/sec: <span id="messagesPerSecond">0</span></span>
+            <span>Connected Clients: <span id="connectedClients">0</span></span>
+        </div>
+    </div>
+    
+    <div class="main-container">
+        <div class="control-bar">
+            <div class="control-group">
+                <label>Filter Topic:</label>
+                <input type="text" id="topicFilter" placeholder="e.g., uns/PRODUCTION/LINE_01">
+                <button onclick="applyTopicFilter()">Filter</button>
+                <button onclick="clearTopicFilter()">Clear</button>
+            </div>
+            <div class="control-group">
+                <label>Subscribe to Topic:</label>
+                <input type="text" id="newTopic" placeholder="e.g., uns/+/+/equipment/status">
+                <button onclick="subscribeToTopic()">Subscribe</button>
+            </div>
+            <div class="control-group">
+                <button onclick="clearMessages()">Clear Messages</button>
+                <button onclick="pauseMessages()" id="pauseBtn">Pause</button>
+            </div>
+        </div>
+        
+        <div class="topics-panel">
+            <div class="panel-header">
+                <h2>📊 Available Topics</h2>
+                <span id="filteredTopicCount">0 topics</span>
+            </div>
+            <div class="panel-content" id="topicsContainer">
+                <div style="text-align: center; color: #666; padding: 2rem;">
+                    Waiting for topic data...
+                </div>
+            </div>
+        </div>
+        
+        <div class="messages-panel">
+            <div class="panel-header">
+                <h2>📝 Live Messages</h2>
+                <span id="messageCount">0 messages</span>
+            </div>
+            <div class="panel-content" id="messagesContainer">
+                <div style="text-align: center; color: #666; padding: 2rem;">
+                    Waiting for messages...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // WebSocket connection
+        const socket = io();
+        
+        // State
+        let topics = new Map();
+        let messages = [];
+        let selectedTopic = null;
+        let messagesPaused = false;
+        let topicFilter = '';
+        
+        // Connection handling
+        socket.on('connect', () => {
+            updateConnectionStatus(true);
+        });
+        
+        socket.on('disconnect', () => {
+            updateConnectionStatus(false);
+        });
+        
+        // Data handlers
+        socket.on('topics', (topicsData) => {
+            topics.clear();
+            topicsData.forEach(topic => {
+                topics.set(topic.name, topic);
+            });
+            renderTopics();
+        });
+        
+        socket.on('topicUpdate', (data) => {
+            topics.set(data.topic, data.info);
+            renderTopics();
+        });
+        
+        socket.on('messages', (messagesData) => {
+            messages = messagesData;
+            renderMessages();
+        });
+        
+        socket.on('message', (message) => {
+            if (!messagesPaused) {
+                messages.unshift(message);
+                if (messages.length > 1000) {
+                    messages = messages.slice(0, 1000);
+                }
+                renderMessages();
+            }
+        });
+        
+        socket.on('statsUpdate', (stats) => {
+            updateStats(stats);
+        });
+        
+        // UI Functions
+        function updateConnectionStatus(connected) {
+            const indicator = document.getElementById('connectionStatus');
+            const text = document.getElementById('connectionText');
+            
+            if (connected) {
+                indicator.className = 'status-indicator status-connected';
+                text.textContent = 'Connected';
+            } else {
+                indicator.className = 'status-indicator status-disconnected';
+                text.textContent = 'Disconnected';
+            }
+        }
+        
+        function updateStats(stats) {
+            document.getElementById('topicCount').textContent = topics.size;
+            document.getElementById('totalMessages').textContent = stats.totalMessages || 0;
+            document.getElementById('messagesPerSecond').textContent = stats.messagesPerSecond || 0;
+            document.getElementById('connectedClients').textContent = stats.connectedClients || 0;
+        }
+        
+        function renderTopics() {
+            const container = document.getElementById('topicsContainer');
+            const filteredTopics = Array.from(topics.values()).filter(topic => {
+                return !topicFilter || topic.name.toLowerCase().includes(topicFilter.toLowerCase());
+            });
+            
+            document.getElementById('filteredTopicCount').textContent = `${filteredTopics.length} topics`;
+            
+            if (filteredTopics.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;">No topics found</div>';
+                return;
+            }
+            
+            container.innerHTML = filteredTopics
+                .sort((a, b) => b.messageCount - a.messageCount)
+                .map(topic => `
+                    <div class="topic-item ${selectedTopic === topic.name ? 'selected' : ''}" 
+                         onclick="selectTopic('${topic.name}')">
+                        <div class="topic-name">${topic.name}</div>
+                        <div class="topic-stats">
+                            <span>📦 ${topic.messageCount} msgs</span>
+                            <span>📏 ${topic.avgMessageSize}B avg</span>
+                            <span>🕒 ${formatTime(topic.lastSeen)}</span>
+                        </div>
+                    </div>
+                `).join('');
+        }
+        
+        function renderMessages() {
+            const container = document.getElementById('messagesContainer');
+            const filteredMessages = selectedTopic 
+                ? messages.filter(msg => msg.topic === selectedTopic)
+                : messages;
+            
+            document.getElementById('messageCount').textContent = `${filteredMessages.length} messages`;
+            
+            if (filteredMessages.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;">No messages</div>';
+                return;
+            }
+            
+            container.innerHTML = filteredMessages.slice(0, 100).map(msg => `
+                <div class="message-item">
+                    <div class="message-header">
+                        <span class="message-topic">${msg.topic}</span>
+                        <span class="message-time">${formatTime(msg.timestamp)} (${msg.size}B)</span>
+                    </div>
+                    <div class="message-content">${formatMessage(msg.message)}</div>
+                </div>
+            `).join('');
+        }
+        
+        function formatMessage(message) {
+            if (typeof message === 'object') {
+                return syntaxHighlight(JSON.stringify(message, null, 2));
+            }
+            return String(message);
+        }
+        
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                var cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+        
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString();
+        }
+        
+        function selectTopic(topicName) {
+            selectedTopic = selectedTopic === topicName ? null : topicName;
+            renderTopics();
+            renderMessages();
+        }
+        
+        function applyTopicFilter() {
+            topicFilter = document.getElementById('topicFilter').value;
+            renderTopics();
+        }
+        
+        function clearTopicFilter() {
+            topicFilter = '';
+            document.getElementById('topicFilter').value = '';
+            renderTopics();
+        }
+        
+        function subscribeToTopic() {
+            const topic = document.getElementById('newTopic').value.trim();
+            if (topic) {
+                socket.emit('subscribe', topic);
+                document.getElementById('newTopic').value = '';
+            }
+        }
+        
+        function clearMessages() {
+            messages = [];
+            renderMessages();
+        }
+        
+        function pauseMessages() {
+            messagesPaused = !messagesPaused;
+            const btn = document.getElementById('pauseBtn');
+            btn.textContent = messagesPaused ? 'Resume' : 'Pause';
+            btn.style.backgroundColor = messagesPaused ? '#FF9800' : '#4CAF50';
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'f':
+                        e.preventDefault();
+                        document.getElementById('topicFilter').focus();
+                        break;
+                    case 'k':
+                        e.preventDefault();
+                        clearMessages();
+                        break;
+                    case ' ':
+                        e.preventDefault();
+                        pauseMessages();
+                        break;
+                }
+            }
+        });
+        
+        // Auto-refresh topic filter
+        document.getElementById('topicFilter').addEventListener('input', (e) => {
+            clearTimeout(window.filterTimeout);
+            window.filterTimeout = setTimeout(() => {
+                applyTopicFilter();
+            }, 300);
+        });
+    </script>
+</body>
+</html>

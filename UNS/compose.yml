@@ -1,0 +1,90 @@
+services:
+  # HiveMQ MQTT Broker - Core UNS Message Broker
+  hivemq:
+    image: hivemq/hivemq4:latest
+    container_name: uns-hivemq
+    ports:
+      - "1883:1883"      # MQTT
+      - "8080:8080"      # HiveMQ Control Center
+    environment:
+      HIVEMQ_BIND_ADDRESS: 0.0.0.0
+      HIVEMQ_CONTROL_CENTER_PASSWORD: admin
+      HIVEMQ_CONTROL_CENTER_USER: hivemq
+    volumes:
+      - ./hivemq/config:/opt/hivemq/conf
+      - hivemq_data:/opt/hivemq/data
+    networks:
+      - uns-network
+
+  # Payload Processor - Standardizes incoming data to ISA-95 format
+  payload-processor:
+    build:
+      context: ./payload-processor
+      dockerfile: Dockerfile
+    container_name: uns-payload-processor
+    depends_on:
+      - hivemq
+    environment:
+      MQTT_BROKER_URL: mqtt://hivemq:1883
+      LOG_LEVEL: info
+    volumes:
+      - ./payload-processor/schemas:/app/schemas
+    networks:
+      - uns-network
+    restart: unless-stopped
+
+  # Redis for caching and state management
+  redis:
+    image: redis:7-alpine
+    container_name: uns-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - uns-network
+    restart: unless-stopped
+
+  # MongoDB for data persistence and historical storage
+  mongodb:
+    image: mongo:7
+    container_name: uns-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: uns_data
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongodb/init:/docker-entrypoint-initdb.d
+    networks:
+      - uns-network
+    restart: unless-stopped
+
+  # MQTT Monitor - Real-time topic explorer and message viewer
+  mqtt-monitor:
+    build:
+      context: ./mqtt-monitor
+      dockerfile: Dockerfile
+    container_name: uns-mqtt-monitor
+    ports:
+      - "3003:3003"
+    depends_on:
+      - hivemq
+    environment:
+      MQTT_BROKER_URL: mqtt://hivemq:1883
+      PORT: 3003
+    networks:
+      - uns-network
+    restart: unless-stopped
+
+volumes:
+  hivemq_data:
+  redis_data:
+  mongodb_data:
+
+networks:
+  uns-network:
+    external: true
+    name: uns_uns-network

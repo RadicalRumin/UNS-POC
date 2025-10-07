@@ -1,0 +1,122 @@
+{
+  "development": {
+    "mqtt": {
+      "brokerUrl": "mqtt://hivemq:1883",
+      "clientId": "mes-service-dev",
+      "topics": {
+        "subscribe": [
+          "uns/+/+/equipment/status",
+          "uns/+/+/process/parameters",
+          "uns/+/+/quality/metrics",
+          "uns/+/+/maintenance/status"
+        ],
+        "publish": {
+          "workOrders": "mes/workorders",
+          "production": "mes/production",
+          "kpis": "mes/kpis"
+        }
+      },
+      "qos": 1,
+      "retainMessages": false
+    },
+    "database": {
+      "mongodb": {
+        "url": "mongodb://admin:password123@mongodb:27017/mes_data?authSource=admin",
+        "options": {
+          "useNewUrlParser": true,
+          "useUnifiedTopology": true
+        }
+      },
+      "postgresql": {
+        "host": "mes-postgres",
+        "port": 5432,
+        "database": "mes_workorders",
+        "user": "mes_user",
+        "password": "mes_password",
+        "ssl": false,
+        "max": 20,
+        "idleTimeoutMillis": 30000,
+        "connectionTimeoutMillis": 2000
+      }
+    },
+    "redis": {
+      "url": "redis://redis:6379",
+      "keyPrefix": "mes:",
+      "ttl": 3600
+    },
+    "server": {
+      "port": 3001,
+      "cors": {
+        "origin": "*",
+        "methods": ["GET", "POST", "PUT", "DELETE"],
+        "allowedHeaders": ["Content-Type", "Authorization"]
+      }
+    },
+    "logging": {
+      "level": "info",
+      "enableConsole": true,
+      "enableFile": false
+    }
+  },
+  "production": {
+    "mqtt": {
+      "brokerUrl": "mqtt://hivemq:1883",
+      "clientId": "mes-service-prod",
+      "topics": {
+        "subscribe": [
+          "uns/+/+/equipment/status",
+          "uns/+/+/process/parameters",
+          "uns/+/+/quality/metrics",
+          "uns/+/+/maintenance/status"
+        ],
+        "publish": {
+          "workOrders": "mes/workorders",
+          "production": "mes/production",
+          "kpis": "mes/kpis"
+        }
+      },
+      "qos": 1,
+      "retainMessages": true
+    },
+    "database": {
+      "mongodb": {
+        "url": "mongodb://admin:password123@mongodb:27017/mes_data?authSource=admin",
+        "options": {
+          "useNewUrlParser": true,
+          "useUnifiedTopology": true,
+          "maxPoolSize": 50
+        }
+      },
+      "postgresql": {
+        "host": "mes-postgres",
+        "port": 5432,
+        "database": "mes_workorders",
+        "user": "mes_user",
+        "password": "mes_password",
+        "ssl": false,
+        "max": 50,
+        "idleTimeoutMillis": 30000,
+        "connectionTimeoutMillis": 2000
+      }
+    },
+    "redis": {
+      "url": "redis://redis:6379",
+      "keyPrefix": "mes:",
+      "ttl": 7200
+    },
+    "server": {
+      "port": 3001,
+      "cors": {
+        "origin": ["http://localhost:3000", "http://localhost:3002"],
+        "methods": ["GET", "POST", "PUT", "DELETE"],
+        "allowedHeaders": ["Content-Type", "Authorization"]
+      }
+    },
+    "logging": {
+      "level": "warn",
+      "enableConsole": true,
+      "enableFile": true,
+      "filePath": "/app/logs/mes.log"
+    }
+  }
+}
