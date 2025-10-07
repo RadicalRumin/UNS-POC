@@ -57,7 +57,7 @@ The architecture uses **MQTT with HiveMQ** as the primary message broker with a 
    docker-compose -f "Level 0-1 LINE/compose.yml" up -d
    ```
 
-3. **Start SCADA (Optional - requires Ignition license):**
+3. **Start SCADA (Optional - persistance requires Ignition license):**
    ```powershell
    docker-compose -f "Level 2 SCADA/compose.yml" up -d
    ```
