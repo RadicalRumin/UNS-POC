@@ -4,6 +4,7 @@ const socketIo = require('socket.io');
 const mqtt = require('mqtt');
 const cors = require('cors');
 const path = require('path');
+const HistoryExplorer = require('./historyExplorer');
 
 const app = express();
 const server = http.createServer(app);
@@ -23,7 +24,7 @@ const mqttClient = mqtt.connect('mqtt://hivemq:1883', {
     clientId: 'mqtt-monitor-' + Math.random().toString(16).substr(2, 8)
 });
 
-// Topic and message tracking
+// Topic and message tracking with memory limits
 let topics = new Map();
 let messageHistory = [];
 let connectedClients = new Set();
@@ -32,6 +33,13 @@ let messageStats = {
     messagesPerSecond: 0,
     lastMinuteMessages: []
 };
+
+// Memory management configuration
+const MAX_MESSAGE_HISTORY = 500; // Reduced from 1000
+const MAX_TOPICS = 100;
+const MAX_LAST_MINUTE_MESSAGES = 1000;
+const CLEANUP_INTERVAL = 30000; // 30 seconds
+const TOPIC_CLEANUP_THRESHOLD = 300000; // 5 minutes inactive
 
 // Subscribe to all UNS topics
 mqttClient.on('connect', () => {
@@ -58,6 +66,47 @@ mqttClient.on('connect', () => {
         }
     });
 });
+
+// Periodic cleanup to prevent memory leaks
+setInterval(() => {
+    try {
+        // Clean up inactive topics
+        const now = new Date();
+        const topicsToDelete = [];
+        
+        for (const [topicName, topicInfo] of topics.entries()) {
+            if (now - new Date(topicInfo.lastSeen) > TOPIC_CLEANUP_THRESHOLD) {
+                topicsToDelete.push(topicName);
+            }
+        }
+        
+        topicsToDelete.forEach(topic => topics.delete(topic));
+        
+        // Limit total number of topics
+        if (topics.size > MAX_TOPICS) {
+            const sortedTopics = Array.from(topics.entries())
+                .sort((a, b) => new Date(b[1].lastSeen) - new Date(a[1].lastSeen));
+            
+            topics.clear();
+            sortedTopics.slice(0, MAX_TOPICS).forEach(([name, info]) => {
+                topics.set(name, info);
+            });
+        }
+        
+        // Cleanup old message history
+        const tenMinutesAgo = new Date(now.getTime() - 600000);
+        messageHistory = messageHistory.filter(msg => new Date(msg.timestamp) > tenMinutesAgo);
+        
+        // Force garbage collection hint
+        if (global.gc) {
+            global.gc();
+        }
+        
+        console.log(`Cleanup complete: ${topics.size} topics, ${messageHistory.length} messages in history`);
+    } catch (error) {
+        console.error('Cleanup error:', error);
+    }
+}, CLEANUP_INTERVAL);
 
 mqttClient.on('message', (topic, message) => {
     const timestamp = new Date();
@@ -90,7 +139,7 @@ mqttClient.on('message', (topic, message) => {
     topicInfo.totalBytes += message.length;
     topicInfo.avgMessageSize = Math.round(topicInfo.totalBytes / topicInfo.messageCount);
     
-    // Update message history (keep last 1000 messages)
+    // Update message history (keep limited messages)
     const messageRecord = {
         id: Date.now() + Math.random(),
         topic,
@@ -100,13 +149,18 @@ mqttClient.on('message', (topic, message) => {
     };
     
     messageHistory.unshift(messageRecord);
-    if (messageHistory.length > 1000) {
-        messageHistory = messageHistory.slice(0, 1000);
+    if (messageHistory.length > MAX_MESSAGE_HISTORY) {
+        messageHistory = messageHistory.slice(0, MAX_MESSAGE_HISTORY);
     }
     
-    // Update stats
+    // Update stats with proper cleanup
     messageStats.totalMessages++;
     messageStats.lastMinuteMessages.push(timestamp);
+    
+    // Limit lastMinuteMessages array size to prevent memory leak
+    if (messageStats.lastMinuteMessages.length > MAX_LAST_MINUTE_MESSAGES) {
+        messageStats.lastMinuteMessages = messageStats.lastMinuteMessages.slice(-600); // Keep last 10 minutes
+    }
     
     // Clean up old messages from last minute counter
     const oneMinuteAgo = new Date(timestamp.getTime() - 60000);
@@ -124,14 +178,15 @@ mqttClient.on('message', (topic, message) => {
     io.emit('statsUpdate', messageStats);
 });
 
-// WebSocket connection handling
+// WebSocket connection handling with memory management
 io.on('connection', (socket) => {
     console.log('Client connected to MQTT monitor');
     connectedClients.add(socket.id);
     
-    // Send current topics and recent messages
-    socket.emit('topics', Array.from(topics.entries()).map(([name, info]) => ({name, ...info})));
-    socket.emit('messages', messageHistory.slice(0, 100)); // Send last 100 messages
+    // Send current topics and recent messages (limited to prevent memory issues)
+    const topicsArray = Array.from(topics.entries()).map(([name, info]) => ({name, ...info}));
+    socket.emit('topics', topicsArray.slice(0, 50)); // Limit topics sent
+    socket.emit('messages', messageHistory.slice(0, 50)); // Limit messages sent
     socket.emit('stats', messageStats);
     
     socket.on('subscribe', (topic) => {
@@ -208,19 +263,131 @@ app.get('/api/topic/:topicName', (req, res) => {
     });
 });
 
+// Initialize History Explorer
+const historyExplorer = new HistoryExplorer();
+historyExplorer.init().catch(error => {
+    console.error('Failed to initialize History Explorer:', error);
+});
+
+// History Explorer API routes
+app.get('/api/history/topics', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 100;
+        const topics = await historyExplorer.getHistoricalTopics(limit);
+        res.json(topics);
+    } catch (error) {
+        console.error('Error fetching historical topics:', error);
+        res.status(500).json({ error: 'Failed to fetch historical topics' });
+    }
+});
+
+app.get('/api/history/topic/:topicName', async (req, res) => {
+    try {
+        const topicName = req.params.topicName;
+        const options = {
+            limit: parseInt(req.query.limit) || 100,
+            startDate: req.query.startDate || null,
+            endDate: req.query.endDate || null,
+            sortOrder: parseInt(req.query.sortOrder) || -1
+        };
+        
+        const result = await historyExplorer.getTopicHistory(topicName, options);
+        res.json(result);
+    } catch (error) {
+        console.error('Error fetching topic history:', error);
+        res.status(500).json({ error: 'Failed to fetch topic history' });
+    }
+});
+
+app.get('/api/history/timeseries/:topicName', async (req, res) => {
+    try {
+        const topicName = req.params.topicName;
+        const options = {
+            startDate: req.query.startDate || null,
+            endDate: req.query.endDate || null,
+            interval: req.query.interval || 'hour',
+            dataPath: req.query.dataPath || null
+        };
+        
+        const data = await historyExplorer.getTimeSeriesData(topicName, options);
+        res.json(data);
+    } catch (error) {
+        console.error('Error fetching time series data:', error);
+        res.status(500).json({ error: 'Failed to fetch time series data' });
+    }
+});
+
+app.get('/api/history/search', async (req, res) => {
+    try {
+        const query = req.query.q || '';
+        const options = {
+            limit: parseInt(req.query.limit) || 50,
+            startDate: req.query.startDate || null,
+            endDate: req.query.endDate || null,
+            topics: req.query.topics ? req.query.topics.split(',') : null
+        };
+        
+        const messages = await historyExplorer.searchMessages(query, options);
+        res.json(messages);
+    } catch (error) {
+        console.error('Error searching historical messages:', error);
+        res.status(500).json({ error: 'Failed to search messages' });
+    }
+});
+
 // Serve the main dashboard
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Serve the history explorer page
+app.get('/history', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'history.html'));
+});
+
+// Memory monitoring
+setInterval(() => {
+    const memUsage = process.memoryUsage();
+    const memUsageMB = {
+        rss: Math.round(memUsage.rss / 1024 / 1024),
+        heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024),
+        heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024),
+        external: Math.round(memUsage.external / 1024 / 1024)
+    };
+    
+    console.log(`Memory usage: RSS=${memUsageMB.rss}MB, Heap=${memUsageMB.heapUsed}/${memUsageMB.heapTotal}MB, Topics=${topics.size}, Messages=${messageHistory.length}`);
+    
+    // Emergency cleanup if memory usage is too high
+    if (memUsageMB.heapUsed > 200) { // 200MB limit
+        console.log('Emergency cleanup triggered due to high memory usage');
+        messageHistory = messageHistory.slice(0, 100);
+        
+        // Keep only most recent topics
+        if (topics.size > 20) {
+            const sortedTopics = Array.from(topics.entries())
+                .sort((a, b) => new Date(b[1].lastSeen) - new Date(a[1].lastSeen));
+            
+            topics.clear();
+            sortedTopics.slice(0, 20).forEach(([name, info]) => {
+                topics.set(name, info);
+            });
+        }
+        
+        if (global.gc) {
+            global.gc();
+        }
+    }
+}, 60000); // Check every minute
+
 const PORT = process.env.PORT || 3003;
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`MQTT Monitor running on http://0.0.0.0:${PORT}`);
+    console.log(`MQTT Monitor running on http://0.0.0.0:${PORT} with memory management enabled`);
 });
 
 process.on('SIGINT', () => {
     console.log('Shutting down MQTT Monitor...');
     mqttClient.end();
+    historyExplorer.close();
     server.close();
     process.exit(0);
 });

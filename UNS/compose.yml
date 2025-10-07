@@ -75,6 +75,13 @@ services:
     environment:
       MQTT_BROKER_URL: mqtt://hivemq:1883
       PORT: 3003
+      NODE_OPTIONS: "--max-old-space-size=256"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
     networks:
       - uns-network
     restart: unless-stopped
