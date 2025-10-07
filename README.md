@@ -4,7 +4,7 @@ This POC demonstrates a complete UNS (Unified Namespace) architecture implementi
 
 ## Architecture Overview
 
-The architecture uses **MQTT with HiveMQ** as the primary message broker with a **payload processor service** for data standardization, avoiding the complexity of a dual MQTT+Kafka setup while maintaining simplicity and effectiveness for the POC.
+The architecture uses **MQTT with HiveMQ** as the primary message broker with a **payload processor service** for data standardization
 
 ### Key Components:
 
@@ -255,9 +255,9 @@ docker-compose up -d
 
 ## Architecture Benefits
 
-This POC provides a complete, production-ready UNS architecture that demonstrates:
+This POC provides a complete UNS architecture that demonstrates:
 
-- Real-world industrial data flow from PLCs through SCADA, MES, and ERP systems
+- Industrial data flow from PLCs through SCADA, MES, and ERP systems
 - ISA-95 compliant data modeling and hierarchical organization
 - MQTT-based unified namespace with payload standardization
 - Comprehensive monitoring and verification capabilities
