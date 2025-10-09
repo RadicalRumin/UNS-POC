@@ -105,7 +105,7 @@ monitoring:
     interval: 30  # seconds
     endpoints:
       - name: "mqtt_broker"
-        url: "mqtt://hivemq:1883"
+        url: "mqtt://chariot-broker:1883"
         timeout: 5
       - name: "postgresql"
         host: "mes-postgres"

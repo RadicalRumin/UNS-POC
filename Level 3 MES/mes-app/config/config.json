@@ -1,7 +1,7 @@
 {
   "development": {
     "mqtt": {
-      "brokerUrl": "mqtt://hivemq:1883",
+      "brokerUrl": "mqtt://chariot-broker:1883",
       "clientId": "mes-service-dev",
       "topics": {
         "subscribe": [
@@ -60,7 +60,7 @@
   },
   "production": {
     "mqtt": {
-      "brokerUrl": "mqtt://hivemq:1883",
+      "brokerUrl": "mqtt://chariot-broker:1883",
       "clientId": "mes-service-prod",
       "topics": {
         "subscribe": [

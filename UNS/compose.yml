@@ -1,20 +1,26 @@
 services:
-  # HiveMQ MQTT Broker - Core UNS Message Broker
-  hivemq:
-    image: hivemq/hivemq4:latest
-    container_name: uns-hivemq
+  # Chariot MQTT Broker - Core UNS Message Broker
+  chariot-broker:
+    build:
+      context: ./chariot
+      dockerfile: Dockerfile
+    container_name: uns-chariot-broker
+    privileged: true  # Required for systemd
     ports:
       - "1883:1883"      # MQTT
-      - "8080:8080"      # HiveMQ Control Center
-    environment:
-      HIVEMQ_BIND_ADDRESS: 0.0.0.0
-      HIVEMQ_CONTROL_CENTER_PASSWORD: admin
-      HIVEMQ_CONTROL_CENTER_USER: hivemq
+      - "8081:8080"      # Chariot Web Interface (host:8081 -> container:8080)
+      - "8883:8883"      # MQTT SSL
     volumes:
-      - ./hivemq/config:/opt/hivemq/conf
-      - hivemq_data:/opt/hivemq/data
+      - ./chariot/config:/etc/chariot
+      - ./chariot/data:/var/lib/chariot/data
+      - ./chariot/logs:/var/log/chariot
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro  # Required for systemd
     networks:
       - uns-network
+    restart: unless-stopped
+    environment:
+      - container=docker
+      - CHARIOT_CONFIG_FILE=/etc/chariot/chariot.conf
 
   # Payload Processor - Standardizes incoming data to ISA-95 format
   payload-processor:
@@ -23,9 +29,9 @@ services:
       dockerfile: Dockerfile
     container_name: uns-payload-processor
     depends_on:
-      - hivemq
+      - chariot-broker
     environment:
-      MQTT_BROKER_URL: mqtt://hivemq:1883
+      MQTT_BROKER_URL: mqtt://chariot-broker:1883
       LOG_LEVEL: info
     volumes:
       - ./payload-processor/schemas:/app/schemas
@@ -71,16 +77,16 @@ services:
     ports:
       - "3003:3003"
     depends_on:
-      - hivemq
+      - chariot-broker
     environment:
-      MQTT_BROKER_URL: mqtt://hivemq:1883
+      MQTT_BROKER_URL: mqtt://chariot-broker:1883
       PORT: 3003
     networks:
       - uns-network
     restart: unless-stopped
 
 volumes:
-  hivemq_data:
+  chariot_data:
   redis_data:
   mongodb_data:
 

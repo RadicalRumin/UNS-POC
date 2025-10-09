@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // MQTT client setup
-const mqttClient = mqtt.connect('mqtt://hivemq:1883', {
+const mqttClient = mqtt.connect('mqtt://chariot-broker:1883', {
     clientId: 'mqtt-monitor-' + Math.random().toString(16).substr(2, 8)
 });
 

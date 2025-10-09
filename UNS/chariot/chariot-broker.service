@@ -1,0 +1,31 @@
+[Unit]
+Description=Chariot MQTT Broker
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=chariot
+Group=chariot
+ExecStart=/opt/chariot/bin/chariot -c /etc/chariot/chariot.conf
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=65536
+StandardOutput=journal
+StandardError=journal
+
+# Environment
+Environment=JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+Environment=CHARIOT_HOME=/opt/chariot
+Environment=CHARIOT_LOG_LEVEL=INFO
+
+# Security settings
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/chariot /var/log/chariot
+
+[Install]
+WantedBy=multi-user.target

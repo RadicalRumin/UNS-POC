@@ -24,13 +24,12 @@ services:
       dockerfile: Dockerfile
     container_name: scada-mqtt-bridge
     environment:
-      MQTT_BROKER_URL: mqtt://hivemq:1883
+      MQTT_BROKER_URL: mqtt://chariot-broker:1883
       IGNITION_GATEWAY_URL: http://ignition:8088
       GATEWAY_USER: admin
       GATEWAY_PASSWORD: password
     depends_on:
       - ignition
-      - hivemq
     networks:
       - uns-network
     restart: unless-stopped

@@ -8,7 +8,7 @@ services:
     environment:
       MACHINE_ID: LINE_01
       MACHINE_TYPE: PRODUCTION_LINE
-      MQTT_BROKER_URL: mqtt://hivemq:1883
+      MQTT_BROKER_URL: mqtt://chariot-broker:1883
       MQTT_TOPIC_PREFIX: raw/plc/line1
       SIMULATION_INTERVAL: 2000  # 2 seconds
     networks:
@@ -23,7 +23,7 @@ services:
     environment:
       MACHINE_ID: PKG_01
       MACHINE_TYPE: PACKAGING_UNIT
-      MQTT_BROKER_URL: mqtt://hivemq:1883
+      MQTT_BROKER_URL: mqtt://chariot-broker:1883
       MQTT_TOPIC_PREFIX: raw/plc/packaging
       SIMULATION_INTERVAL: 3000  # 3 seconds
     networks:
@@ -38,7 +38,7 @@ services:
     environment:
       MACHINE_ID: CONV_01
       MACHINE_TYPE: CONVEYOR_SYSTEM
-      MQTT_BROKER_URL: mqtt://hivemq:1883
+      MQTT_BROKER_URL: mqtt://chariot-broker:1883
       MQTT_TOPIC_PREFIX: raw/plc/conveyor
       SIMULATION_INTERVAL: 1500  # 1.5 seconds
     networks:

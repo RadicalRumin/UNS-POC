@@ -8,7 +8,7 @@ services:
     ports:
       - "3002:3002"   # ERP Web Interface
     environment:
-      MQTT_BROKER_URL: mqtt://hivemq:1883
+      MQTT_BROKER_URL: mqtt://chariot-broker:1883
       MONGODB_URL: mongodb://admin:password123@mongodb:27017/erp_data?authSource=admin
       REDIS_URL: redis://redis:6379
       MES_API_URL: http://mes-service:3001

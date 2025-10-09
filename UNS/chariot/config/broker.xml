@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chariot-broker>
+    <general>
+        <name>UNS-Chariot-Broker</name>
+        <description>Chariot MQTT Broker for UNS POC</description>
+        <version>2.0</version>
+    </general>
+    
+    <network>
+        <mqtt>
+            <listeners>
+                <listener>
+                    <name>mqtt-tcp</name>
+                    <port>1883</port>
+                    <bind-address>0.0.0.0</bind-address>
+                    <protocol>mqtt</protocol>
+                    <max-connections>1000</max-connections>
+                    <keepalive-interval>60</keepalive-interval>
+                </listener>
+                
+                <listener>
+                    <name>mqtt-websocket</name>
+                    <port>8080</port>
+                    <bind-address>0.0.0.0</bind-address>
+                    <protocol>websockets</protocol>
+                    <max-connections>500</max-connections>
+                </listener>
+                
+                <listener>
+                    <name>mqtt-ssl</name>
+                    <port>8883</port>
+                    <bind-address>0.0.0.0</bind-address>
+                    <protocol>mqtt</protocol>
+                    <ssl>true</ssl>
+                    <certificate>/etc/chariot/ssl/broker.crt</certificate>
+                    <private-key>/etc/chariot/ssl/broker.key</private-key>
+                </listener>
+            </listeners>
+        </mqtt>
+    </network>
+    
+    <security>
+        <authentication>
+            <allow-anonymous>true</allow-anonymous>
+            <password-file>/etc/chariot/passwords</password-file>
+        </authentication>
+        
+        <authorization>
+            <acl-file>/etc/chariot/acl.conf</acl-file>
+        </authorization>
+    </security>
+    
+    <persistence>
+        <enabled>true</enabled>
+        <storage-path>/var/lib/chariot/data</storage-path>
+        <max-retained-messages>10000</max-retained-messages>
+        <message-store-limit>100MB</message-store-limit>
+    </persistence>
+    
+    <logging>
+        <level>INFO</level>
+        <destinations>
+            <file>/var/log/chariot/broker.log</file>
+            <console>true</console>
+        </destinations>
+        <timestamp>true</timestamp>
+        <max-file-size>10MB</max-file-size>
+        <max-files>5</max-files>
+    </logging>
+    
+    <performance>
+        <max-message-size>256MB</max-message-size>
+        <max-inflight-messages>20</max-inflight-messages>
+        <max-queued-messages>1000</max-queued-messages>
+    </performance>
+    
+    <features>
+        <shared-subscriptions>true</shared-subscriptions>
+        <wildcard-subscriptions>true</wildcard-subscriptions>
+        <retained-messages>true</retained-messages>
+        <last-will-testament>true</last-will-testament>
+    </features>
+</chariot-broker>
