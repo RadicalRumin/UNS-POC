@@ -56,9 +56,11 @@ RUN systemctl enable chariot-broker.service
 COPY config/ /etc/chariot/
 COPY start-chariot.sh /usr/local/bin/
 COPY start-chariot-direct.sh /usr/local/bin/
+COPY configure-chariot.sh /usr/local/bin/
 COPY test-installation.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/start-chariot.sh && \
     chmod +x /usr/local/bin/start-chariot-direct.sh && \
+    chmod +x /usr/local/bin/configure-chariot.sh && \
     chmod +x /usr/local/bin/test-installation.sh
 
 # Create chariot user

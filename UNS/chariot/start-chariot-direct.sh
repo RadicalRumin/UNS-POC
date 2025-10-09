@@ -26,6 +26,16 @@ echo "Running Chariot installation..."
 echo "Checking Chariot installation status..."
 ./status.sh
 
+# Run startup configuration hook if it exists
+if [ -f "/var/lib/chariot/config/startup-hook.sh" ]; then
+    echo "Running startup configuration hook..."
+    /var/lib/chariot/config/startup-hook.sh
+fi
+
+# Start configuration script in background
+echo "Starting post-configuration script in background..."
+/usr/local/bin/configure-chariot.sh &
+
 # For containers, run in console mode instead of daemon mode
 echo "Starting Chariot in console mode (better for containers)..."
 exec ./yajsw/bin/runConsole.sh

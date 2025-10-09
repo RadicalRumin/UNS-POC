@@ -21,6 +21,9 @@ services:
     environment:
       - container=docker
       - CHARIOT_CONFIG_FILE=/etc/chariot/chariot.conf
+      # Security Configuration - Change these for production!
+      - CHARIOT_ENVIRONMENT=${CHARIOT_ENVIRONMENT:-development}  # development/production/staging
+      - CHARIOT_ALLOW_ANONYMOUS=${CHARIOT_ALLOW_ANONYMOUS:-true}  # Set to false for production
 
   # Payload Processor - Standardizes incoming data to ISA-95 format
   payload-processor:
