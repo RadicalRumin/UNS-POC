@@ -1,8 +1,8 @@
 {
   "name": "uns-payload-processor",
-  "version": "1.0.0",
-  "description": "UNS Payload Processor - Standardizes incoming data to ISA-95 format",
-  "main": "processor.js",
+  "version": "2.0.0",
+  "description": "Flexible UNS Payload Processor - Configurable data transformation with enterprise structure discovery",
+  "main": "flexible-processor.js",
   "dependencies": {
     "mqtt": "^5.0.0",
     "joi": "^17.10.0",
@@ -11,6 +11,13 @@
     "uuid": "^9.0.0"
   },
   "scripts": {
-    "start": "node processor.js"
-  }
+    "start": "node flexible-processor.js",
+    "start:legacy": "node processor.js",
+    "start:dev": "node flexible-processor.js ./config/dev-config.json",
+    "test": "echo \"Tests not implemented yet\" && exit 1",
+    "validate-config": "node -e \"console.log('Config validation not implemented yet')\""
+  },
+  "keywords": ["uns", "isa95", "mqtt", "manufacturing", "iiot", "flexible"],
+  "author": "UNS POC Team",
+  "license": "MIT"
 }

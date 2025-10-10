@@ -1,0 +1,296 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ISA-95 Part 2 Standardized Data Schema",
+  "description": "Enhanced ISA-95 Part 2 compliant data structure with enterprise hierarchy",
+  "type": "object",
+  "required": ["messageId", "timestamp", "enterprise", "equipment", "dataType"],
+  "properties": {
+    "messageId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for this message"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of the data"
+    },
+    "enterprise": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Enterprise identifier"
+        },
+        "site": {
+          "type": "string",
+          "description": "Site/plant identifier"
+        },
+        "area": {
+          "type": "string", 
+          "description": "Production area identifier"
+        },
+        "workUnit": {
+          "type": "string",
+          "description": "Work unit identifier"
+        },
+        "line": {
+          "type": "string",
+          "description": "Production line identifier"
+        }
+      }
+    },
+    "equipment": {
+      "type": "object",
+      "required": ["id", "class"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique equipment identifier"
+        },
+        "class": {
+          "type": "string", 
+          "description": "Equipment class/type"
+        },
+        "model": {
+          "type": "string",
+          "description": "Equipment model"
+        },
+        "status": {
+          "type": "object",
+          "properties": {
+            "operationalState": {
+              "type": "string",
+              "enum": ["ACTIVE", "INACTIVE", "STANDBY", "FAULT", "MAINTENANCE"],
+              "description": "ISA-95 Part 2 operational state"
+            },
+            "availability": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Equipment availability percentage"
+            },
+            "performance": {
+              "type": "number", 
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Performance efficiency percentage"
+            },
+            "quality": {
+              "type": "number",
+              "minimum": 0, 
+              "maximum": 100,
+              "description": "Quality rate percentage"
+            },
+            "oee": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Overall Equipment Effectiveness"
+            }
+          }
+        }
+      }
+    },
+    "dataType": {
+      "type": "string",
+      "enum": ["equipment", "process", "quality", "maintenance", "energy", "safety"],
+      "description": "Type of data contained in this message"
+    },
+    "processParameters": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z][a-zA-Z0-9_]*$": {
+          "type": "object",
+          "required": ["value", "unit"],
+          "properties": {
+            "value": {
+              "type": "number",
+              "description": "Parameter value"
+            },
+            "unit": {
+              "type": "string",
+              "description": "Unit of measurement"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Parameter timestamp"
+            },
+            "quality": {
+              "type": "string",
+              "enum": ["GOOD", "BAD", "UNCERTAIN"],
+              "description": "Data quality indicator"
+            },
+            "limits": {
+              "type": "object",
+              "properties": {
+                "min": {
+                  "type": "number"
+                },
+                "max": {
+                  "type": "number"
+                },
+                "target": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "qualityMetrics": {
+      "type": "object",
+      "properties": {
+        "goodParts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rejectedParts": {
+          "type": "integer", 
+          "minimum": 0
+        },
+        "reworkParts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "totalParts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "yieldRate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "defectTypes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "maintenanceInfo": {
+      "type": "object", 
+      "properties": {
+        "lastMaintenanceDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "nextScheduledMaintenance": {
+          "type": "string", 
+          "format": "date-time"
+        },
+        "maintenanceType": {
+          "type": "string",
+          "enum": ["PREVENTIVE", "CORRECTIVE", "PREDICTIVE", "CONDITION_BASED"]
+        },
+        "runTimeHours": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cycleCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "alerts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "severity": {
+                "type": "string",
+                "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+              },
+              "message": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      }
+    },
+    "energyMetrics": {
+      "type": "object",
+      "properties": {
+        "powerConsumption": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Current power consumption in kW"
+        },
+        "energyTotal": {
+          "type": "number", 
+          "minimum": 0,
+          "description": "Total energy consumed in kWh"
+        },
+        "efficiency": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Energy efficiency percentage"
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "batchId": {
+          "type": "string",
+          "description": "Associated batch/lot identifier"
+        },
+        "recipeId": {
+          "type": "string", 
+          "description": "Recipe/process definition identifier"
+        },
+        "operatorId": {
+          "type": "string",
+          "description": "Current operator identifier"
+        },
+        "workOrder": {
+          "type": "string",
+          "description": "Work order identifier"
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "Data source identifier"
+        },
+        "version": {
+          "type": "string",
+          "description": "Schema/format version"
+        },
+        "tags": {
+          "type": "object",
+          "patternProperties": {
+            ".*": {
+              "type": ["string", "number", "boolean"]
+            }
+          }
+        }
+      }
+    }
+  }
+}

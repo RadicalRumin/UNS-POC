@@ -1,0 +1,108 @@
+{
+  "version": "1.0",
+  "description": "Configurable Payload Processor Configuration",
+  "globalSettings": {
+    "outputFormat": "isa95-part2",
+    "allowCustomFormats": true,
+    "enterpriseDiscovery": {
+      "enabled": true,
+      "metadataTopics": [
+        "enterprise/+/metadata",
+        "structure/+/info"
+      ],
+      "discoveryTimeout": 30000
+    }
+  },
+  
+  "outputFormats": {
+    "isa95-part2": {
+      "name": "ISA-95 Part 2 Standard",
+      "schema": "./schemas/output/isa95-part2-schema.json",
+      "transformer": "./transformers/isa95-part2-transformer.js",
+      "topicTemplate": "uns/{enterprise}/{site}/{area}/{workUnit}/{equipment}/{dataType}"
+    },
+    "isa95-legacy": {
+      "name": "ISA-95 Legacy Format",
+      "schema": "./schemas/output/isa95-legacy-schema.json", 
+      "transformer": "./transformers/isa95-legacy-transformer.js",
+      "topicTemplate": "uns/{area}/{workUnit}/equipment/status"
+    },
+    "custom-hierarchical": {
+      "name": "Custom Hierarchical Format",
+      "schema": "./schemas/output/custom-schema.json",
+      "transformer": "./transformers/custom-transformer.js",
+      "topicTemplate": "{enterprise}/{region}/{facility}/{line}/{equipment}/{metric}"
+    }
+  },
+  
+  "inputSources": {
+    "raw-plc": {
+      "topics": ["raw/plc/+/data"],
+      "schema": "./schemas/input/raw-plc-schema.json",
+      "metadataExtraction": {
+        "equipmentId": "machineId",
+        "equipmentType": "machineType",
+        "locationHint": "topic.parts[2]"
+      }
+    },
+    "raw-scada": {
+      "topics": ["raw/scada/+/data"],
+      "schema": "./schemas/input/raw-scada-schema.json",
+      "metadataExtraction": {
+        "equipmentId": "deviceId",
+        "equipmentType": "deviceType", 
+        "locationHint": "topic.parts[2]"
+      }
+    },
+    "raw-sensor": {
+      "topics": ["raw/sensor/+/data"],
+      "schema": "./schemas/input/raw-sensor-schema.json",
+      "metadataExtraction": {
+        "equipmentId": "sensorId",
+        "equipmentType": "sensorType",
+        "locationHint": "topic.parts[2]"
+      }
+    }
+  },
+  
+  "enterpriseStructure": {
+    "discoveryMode": "dynamic",
+    "fallbackMode": "adaptive",
+    "metadataSchema": "./schemas/enterprise/metadata-schema.json",
+    "hierarchyLevels": [
+      "enterprise",
+      "site", 
+      "area",
+      "workUnit",
+      "equipment"
+    ],
+    "fallbackMappings": {
+      "equipmentTypeToArea": {
+        "PRODUCTION_LINE": "PRODUCTION",
+        "PACKAGING_UNIT": "PACKAGING", 
+        "CONVEYOR_SYSTEM": "MATERIAL_HANDLING",
+        "QUALITY_STATION": "QUALITY_CONTROL"
+      }
+    }
+  },
+  
+  "dataProcessing": {
+    "validation": {
+      "strictMode": false,
+      "allowUnknownFields": true
+    },
+    "enrichment": {
+      "addTimestamps": true,
+      "addMessageIds": true,
+      "calculateDerivedMetrics": true
+    },
+    "caching": {
+      "ttl": 3600,
+      "keyTemplate": "equipment:{equipmentId}:latest"
+    },
+    "persistence": {
+      "collection": "equipment_data",
+      "addCreatedAt": true
+    }
+  }
+}

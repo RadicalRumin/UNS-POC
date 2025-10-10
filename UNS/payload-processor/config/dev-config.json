@@ -1,0 +1,111 @@
+{
+  "version": "2.0",
+  "description": "Development Configuration for Flexible Payload Processor",
+  "globalSettings": {
+    "outputFormat": "isa95-part2",
+    "allowCustomFormats": true,
+    "enterpriseDiscovery": {
+      "enabled": true,
+      "metadataTopics": [
+        "enterprise/+/metadata",
+        "structure/+/info",
+        "dev/+/metadata"
+      ],
+      "discoveryTimeout": 10000
+    }
+  },
+  
+  "outputFormats": {
+    "isa95-part2": {
+      "name": "ISA-95 Part 2 Standard",
+      "schema": "./schemas/output/isa95-part2-schema.json",
+      "topicTemplate": "uns/{enterprise}/{site}/{area}/{workUnit}/{equipment}/{dataType}"
+    },
+    "isa95-legacy": {
+      "name": "ISA-95 Legacy Format (Original)",
+      "topicTemplate": "uns/{area}/{workUnit}/equipment/status"
+    },
+    "dev-simple": {
+      "name": "Simple Development Format",
+      "topicTemplate": "dev/{area}/{equipment}/{dataType}"
+    }
+  },
+  
+  "inputSources": {
+    "raw-plc": {
+      "topics": ["raw/plc/+/data", "dev/plc/+/data"],
+      "schema": "./schemas/input/raw-plc-schema.json",
+      "metadataExtraction": {
+        "equipmentId": "machineId",
+        "equipmentType": "machineType",
+        "locationHint": "topic.parts[2]"
+      }
+    },
+    "raw-scada": {
+      "topics": ["raw/scada/+/data", "dev/scada/+/data"],
+      "schema": "./schemas/input/raw-scada-schema.json", 
+      "metadataExtraction": {
+        "equipmentId": "deviceId",
+        "equipmentType": "deviceType",
+        "locationHint": "topic.parts[2]"
+      }
+    },
+    "raw-sensor": {
+      "topics": ["raw/sensor/+/data", "dev/sensor/+/data"],
+      "schema": "./schemas/input/raw-sensor-schema.json",
+      "metadataExtraction": {
+        "equipmentId": "sensorId", 
+        "equipmentType": "sensorType",
+        "locationHint": "topic.parts[2]"
+      }
+    }
+  },
+  
+  "enterpriseStructure": {
+    "discoveryMode": "dynamic",
+    "fallbackMode": "adaptive",
+    "metadataSchema": "./schemas/enterprise/metadata-schema.json",
+    "hierarchyLevels": [
+      "enterprise",
+      "site",
+      "area", 
+      "workUnit",
+      "equipment"
+    ],
+    "fallbackMappings": {
+      "equipmentTypeToArea": {
+        "PRODUCTION_LINE": "PRODUCTION",
+        "PACKAGING_UNIT": "PACKAGING",
+        "CONVEYOR_SYSTEM": "MATERIAL_HANDLING", 
+        "QUALITY_STATION": "QUALITY_CONTROL"
+      }
+    }
+  },
+  
+  "dataProcessing": {
+    "validation": {
+      "strictMode": false,
+      "allowUnknownFields": true
+    },
+    "enrichment": {
+      "addTimestamps": true,
+      "addMessageIds": true,
+      "calculateDerivedMetrics": true
+    },
+    "caching": {
+      "ttl": 1800,
+      "keyTemplate": "dev:equipment:{equipmentId}:latest"
+    },
+    "persistence": {
+      "collection": "dev_equipment_data",
+      "addCreatedAt": true
+    }
+  },
+  
+  "logging": {
+    "level": "debug",
+    "logDiscovery": true,
+    "logTransformations": true,
+    "logTopicGeneration": true
+  }
+}

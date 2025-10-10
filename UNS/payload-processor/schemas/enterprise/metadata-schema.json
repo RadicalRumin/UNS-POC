@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Enterprise Structure Metadata Schema",
+  "description": "Schema for enterprise structure information sent by publishers",
+  "type": "object",
+  "required": ["publisherId", "timestamp", "structureInfo"],
+  "properties": {
+    "publisherId": {
+      "type": "string",
+      "description": "Unique identifier of the publisher/data source"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this metadata was generated"
+    },
+    "structureInfo": {
+      "type": "object",
+      "required": ["equipmentId", "location"],
+      "properties": {
+        "equipmentId": {
+          "type": "string",
+          "description": "Unique equipment identifier"
+        },
+        "equipmentType": {
+          "type": "string",
+          "description": "Type/category of equipment"
+        },
+        "location": {
+          "type": "object",
+          "description": "Hierarchical location within enterprise",
+          "properties": {
+            "enterprise": {
+              "type": "string",
+              "description": "Enterprise/company name"
+            },
+            "site": {
+              "type": "string", 
+              "description": "Physical site/plant location"
+            },
+            "area": {
+              "type": "string",
+              "description": "Production area (e.g., Assembly, Packaging)"
+            },
+            "workUnit": {
+              "type": "string",
+              "description": "Work unit/cell identifier"
+            },
+            "line": {
+              "type": "string",
+              "description": "Production line identifier"
+            }
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of capabilities this equipment provides"
+        },
+        "dataTypes": {
+          "type": "array", 
+          "items": {
+            "type": "string",
+            "enum": ["equipment", "process", "quality", "maintenance", "energy", "safety"]
+          },
+          "description": "Types of data this equipment publishes"
+        },
+        "tags": {
+          "type": "object",
+          "patternProperties": {
+            ".*": {
+              "type": ["string", "number", "boolean"]
+            }
+          },
+          "description": "Custom tags/properties for this equipment"
+        }
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "relatedEquipmentId": {
+            "type": "string"
+          },
+          "relationshipType": {
+            "type": "string",
+            "enum": ["parent", "child", "upstream", "downstream", "sibling"]
+          }
+        }
+      },
+      "description": "Relationships to other equipment"
+    }
+  }
+}

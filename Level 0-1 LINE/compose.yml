@@ -15,6 +15,21 @@ services:
       - uns-network
     restart: unless-stopped
 
+  plc-simulator-line2:
+    build:
+      context: ./plc-simulators
+      dockerfile: Dockerfile
+    container_name: plc-line2
+    environment:
+      MACHINE_ID: LINE_02
+      MACHINE_TYPE: PRODUCTION_LINE
+      MQTT_BROKER_URL: mqtt://chariot-broker:1883
+      MQTT_TOPIC_PREFIX: raw/plc/line2
+      SIMULATION_INTERVAL: 2000  # 2 seconds
+    networks:
+      - uns-network
+    restart: unless-stopped
+
   plc-simulator-packaging:
     build:
       context: ./plc-simulators
