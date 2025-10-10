@@ -4,3 +4,8 @@ include:
   - path: ./Level 2 SCADA/compose.yml
   - path: ./Level 3 MES/compose.yml
   - path: ./Level 4 ERP/compose.yml
+
+networks:
+  uns-network:
+    name: uns-network
+    driver: bridge

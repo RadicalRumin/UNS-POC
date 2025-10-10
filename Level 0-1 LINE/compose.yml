@@ -45,7 +45,4 @@ services:
       - uns-network
     restart: unless-stopped
 
-networks:
-  uns-network:
-    external: true
-    name: uns_uns-network
+

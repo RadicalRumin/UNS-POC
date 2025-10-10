@@ -40,7 +40,4 @@ services:
 volumes:
   mes_postgres_data:
 
-networks:
-  uns-network:
-    external: true
-    name: uns_uns-network
+

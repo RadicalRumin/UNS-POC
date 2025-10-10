@@ -37,7 +37,4 @@ services:
 volumes:
   ignition_data:
 
-networks:
-  uns-network:
-    external: true
-    name: uns_uns-network
+

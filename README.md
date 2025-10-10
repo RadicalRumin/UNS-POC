@@ -9,18 +9,18 @@ The architecture uses **MQTT with HiveMQ** as the primary message broker with a 
 ### Key Components:
 
 1. **UNS Core** (Message Broker & Processor)
-   - HiveMQ MQTT Broker with Control Center
+   - MQTT Broker
    - Payload Processor Service (ISA-95 standardization)
    - MQTT Monitor (real-time topic explorer and message viewer)
    - Redis (caching)
-   - MongoDB (historical data)
+   - MongoDB (equipment data)
 
 2. **Level 0-1 (Production Line)**
    - PLC Simulators (Line 1, Packaging, Conveyor)
    - Realistic sensor data generation with state transitions
    - Raw MQTT data publication
 
-3. **Level 2 (SCADA)**
+3. **Level 2 (SCADA) WIP**
    - Ignition Gateway with MQTT bridge
    - Real-time data visualization
    - UNS integration layer
@@ -216,7 +216,7 @@ uns/enterprise/equipment/{EQUIPMENT_ID}
 ### Common Issues:
 1. **Port conflicts**: Ensure ports 1883, 8080, 3001, 3002, 3003, 5432, 5433, 6379, 27017 are available
 2. **Memory issues**: Increase Docker memory limit to 8GB minimum
-3. **Network issues**: Verify Docker network "uns_uns-network" is created
+3. **Network issues**: Verify Docker network "uns-network" is created
 4. **Database connections**: Check PostgreSQL and MongoDB container health
 5. **MQTT connectivity**: Verify HiveMQ broker is accessible on port 1883
 
@@ -233,7 +233,7 @@ docker-compose logs -f
 
 # Check network connectivity
 docker network ls
-docker network inspect uns_uns-network
+docker network inspect uns-network
 
 # Verify message flow
 curl http://localhost:3003/api/payload-processor/verify
@@ -243,7 +243,7 @@ curl http://localhost:3003/api/payload-processor/verify
 ```powershell
 docker-compose down -v
 docker system prune -f
-docker network create uns_uns-network
+docker network create uns-network
 docker-compose up -d
 ```
 
